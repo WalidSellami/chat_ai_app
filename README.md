@@ -1,6 +1,6 @@
 # chat_ai
 
-A new Flutter project --> Assistant AI app based on the Google Gemini model, which supports chat with text typing with adding image or speech in English, Arabic, and French, along with other features.
+A new Flutter app project  --> Assistant AI app based on the Google Gemini model, which supports chat with text typing with adding image or speech in English, Arabic, and French, along with other features.
 
 UI/UX (some screens):
 
