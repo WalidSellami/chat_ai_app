@@ -185,7 +185,12 @@ class SuccessClearAppState extends AppStates {}
 // Get Image
 class SuccessGetImageAppState extends AppStates {}
 
-class ErrorGetImageAppState extends AppStates {}
+class ErrorGetImageAppState extends AppStates {
+
+  dynamic error;
+  ErrorGetImageAppState(this.error);
+
+}
 
 
 // Upload And Get ImageUrl

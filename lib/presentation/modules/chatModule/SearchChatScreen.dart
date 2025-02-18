@@ -27,6 +27,8 @@ class _SearchChatScreenState extends State<SearchChatScreen> {
 
   final FocusNode focusNode = FocusNode();
 
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+
 
   @override
   void initState() {
@@ -58,139 +60,148 @@ class _SearchChatScreenState extends State<SearchChatScreen> {
 
             var cubit = AppCubit.get(context);
 
-            return PopScope(
-              onPopInvoked: (v) {
-                if(checkCubit.hasInternet) {cubit.getChats();}
-                Future.delayed(const Duration(milliseconds: 300)).then((value) {
-                  setState(() {searchController.clear();});
-                });
+            return GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragEnd: (details) {
+                if (details.primaryVelocity != null && details.primaryVelocity! > 0) {
+                  focusNode.unfocus();
+                  Navigator.pop(context);
+                }
               },
-              child: Scaffold(
-                appBar: defaultAppBar(
-                  title: 'Search Chat',
-                  onPress: () {
-                    if(checkCubit.hasInternet) {cubit.getChats();}
-                    Future.delayed(const Duration(milliseconds: 300)).then((value) {
-                      setState(() {searchController.clear();});
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-                body: FadeInRight(
-                  duration: const Duration(milliseconds: 400),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        defaultSearchFormField(
-                            text: 'Type Chat Name ...',
-                            controller: searchController,
-                            type: TextInputType.text,
-                            focusNode: focusNode,
-                            onChange: (value) {
-                              if(checkCubit.hasInternet) {
-                                if(value.isNotEmpty) {cubit.searchChat(chatName: searchController.text);}
+              child: PopScope(
+                onPopInvokedWithResult: (didPop, result) {
+                  if(checkCubit.hasInternet) {cubit.getChats();}
+                  Future.delayed(const Duration(milliseconds: 300)).then((value) {
+                    setState(() {searchController.clear();});
+                  });
+                },
+                child: Scaffold(
+                  appBar: defaultAppBar(
+                    title: 'Search Chat',
+                    onPress: () {
+                      if(checkCubit.hasInternet) {cubit.getChats();}
+                      Future.delayed(const Duration(milliseconds: 300)).then((value) {
+                        setState(() {searchController.clear();});
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                  body: FadeInRight(
+                    duration: const Duration(milliseconds: 400),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          defaultSearchFormField(
+                              text: 'Type Chat Name ...',
+                              controller: searchController,
+                              type: TextInputType.text,
+                              focusNode: focusNode,
+                              onChange: (value) {
+                                if(checkCubit.hasInternet) {
+                                  if(value.isNotEmpty) {cubit.searchChat(chatName: searchController.text);}
+                                }
+                              },
+                            onPress: () {
+                                setState(() {searchController.clear();});
+                                if(checkCubit.hasInternet) {cubit.getChats();}
                               }
-                            },
-                          onPress: () {
-                              setState(() {searchController.clear();});
-                              if(checkCubit.hasInternet) {cubit.getChats();}
-                            }
-                        ),
-                        const SizedBox(
-                          height: 30.0,
-                        ),
-                        Expanded(
-                          child: (checkCubit.hasInternet) ?
-                          ConditionalBuilder(
-                            condition: cubit.groupedChats.isNotEmpty,
-                            builder: (context) => ListView.separated(
-                              physics: const BouncingScrollPhysics(),
-                              itemBuilder: (context, i) {
-                                String status = cubit.groupedChats.keys.elementAt(i);
-                                List<dynamic> chats = cubit.groupedChats.values.elementAt(i);
-                                List<String> idChats = cubit.groupedIdChats.values.elementAt(i);
+                          ),
+                          const SizedBox(
+                            height: 30.0,
+                          ),
+                          Expanded(
+                            child: (checkCubit.hasInternet) ?
+                            ConditionalBuilder(
+                              condition: cubit.groupedChats.isNotEmpty,
+                              builder: (context) => ListView.separated(
+                                physics: const BouncingScrollPhysics(),
+                                itemBuilder: (context, i) {
+                                  String status = cubit.groupedChats.keys.elementAt(i);
+                                  List<dynamic> chats = cubit.groupedChats.values.elementAt(i);
+                                  List<String> idChats = cubit.groupedIdChats.values.elementAt(i);
 
-                                // Inner indexes
-                                Map<int, List<int>> listOfIndex = {
-                                  i: List.generate(chats.length, (index) => index),
-                                };
+                                  // Inner indexes
+                                  Map<int, List<int>> listOfIndex = {
+                                    i: List.generate(chats.length, (index) => index),
+                                  };
 
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    FadeIn(
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                          left: 8.0,
-                                        ),
-                                        child: Text(
-                                          status,
-                                          style: TextStyle(
-                                            fontSize: 14.0,
-                                            color: ThemeCubit.get(context).isDarkTheme ?
-                                            Colors.grey.shade500 : Colors.grey.shade600,
-                                            fontWeight: FontWeight.bold,
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      FadeIn(
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 8.0,
+                                          ),
+                                          child: Text(
+                                            status,
+                                            style: TextStyle(
+                                              fontSize: 14.0,
+                                              color: ThemeCubit.get(context).isDarkTheme ?
+                                              Colors.grey.shade500 : Colors.grey.shade600,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                    ListView.builder(
-                                        shrinkWrap: true,
-                                        physics: const NeverScrollableScrollPhysics(),
-                                        itemBuilder: (context, index) {
-                                          int actualIndex = listOfIndex[i]![index];
-                                          return buildItemChatSearch(chats[actualIndex], idChats[actualIndex],
-                                              i, actualIndex);
-                                        },
-                                        itemCount: chats.length),
-                                  ],
-                                );
-                              },
-                              separatorBuilder: (context, index) => const SizedBox(
-                                height: 24.0,
+                                      ListView.builder(
+                                          shrinkWrap: true,
+                                          physics: const NeverScrollableScrollPhysics(),
+                                          itemBuilder: (context, index) {
+                                            int actualIndex = listOfIndex[i]![index];
+                                            return buildItemChatSearch(chats[actualIndex], idChats[actualIndex],
+                                                i, actualIndex);
+                                          },
+                                          itemCount: chats.length),
+                                    ],
+                                  );
+                                },
+                                separatorBuilder: (context, index) => const SizedBox(
+                                  height: 24.0,
+                                ),
+                                itemCount: cubit.groupedChats.length,
                               ),
-                              itemCount: cubit.groupedChats.length,
-                            ),
-                            fallback: (context) => (state is LoadingGetChatsAppState) ?
-                            Center(child: LoadingIndicator(os: getOs())) :
-                            const Center(
-                              child: Text(
-                                'There is no chats',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 16.0,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.6,
+                              fallback: (context) => (state is LoadingGetChatsAppState) ?
+                              Center(child: LoadingIndicator(os: getOs())) :
+                              const Center(
+                                child: Text(
+                                  'There is no chats',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.6,
+                                  ),
+                                ),
+                              ),
+                            ) :
+                            FadeIn(
+                              duration: const Duration(milliseconds: 400),
+                              child: const Center(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'No Internet',
+                                      style: TextStyle(
+                                        fontSize: 17.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 4.0,
+                                    ),
+                                    Icon(
+                                      EvaIcons.wifiOffOutline,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                          ) :
-                          FadeIn(
-                            duration: const Duration(milliseconds: 400),
-                            child: const Center(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'No Internet',
-                                    style: TextStyle(
-                                      fontSize: 17.0,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 4.0,
-                                  ),
-                                  Icon(
-                                    EvaIcons.wifiOffOutline,
-                                  ),
-                                ],
-                              ),
-                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

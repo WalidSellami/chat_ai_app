@@ -2,6 +2,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:chat_ai/presentation/modules/startUpModule/authOptionsScreen/AuthOptionsScreen.dart';
 import 'package:chat_ai/shared/components/Components.dart';
+import 'package:chat_ai/shared/components/Extensions.dart';
 import 'package:chat_ai/shared/cubits/checkCubit/CheckCubit.dart';
 import 'package:chat_ai/shared/cubits/checkCubit/CheckStates.dart';
 import 'package:chat_ai/shared/network/local/CacheHelper.dart';
@@ -62,20 +63,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(
-                        height: 20.0,
-                      ),
+                     26.0.vrSpace,
                       const Text(
                         'Your intelligent conversational assistant',
                         style: TextStyle(
-                          fontSize: 17.0,
+                          fontSize: 16.0,
                           // fontWeight: FontWeight.bold,
                           letterSpacing: 0.6,
                         ),
                       ),
-                      const SizedBox(
-                        height: 8.0,
-                      ),
+                      12.0.vrSpace,
                       Text.rich(
                         TextSpan(
                           text: 'Based on ',
@@ -89,7 +86,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             ),
                           ],
                           style: const TextStyle(
-                            fontSize: 17.0,
+                            fontSize: 16.0,
                             // fontWeight: FontWeight.bold,
                             letterSpacing: 0.6,
                           ),
@@ -98,9 +95,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(
-                  height: 30.0,
-                ),
+               30.0.vrSpace,
                 FadeInUp(
                   child: AvatarGlow(
                     startDelay: const Duration(milliseconds: 650),

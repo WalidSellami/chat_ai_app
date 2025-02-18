@@ -30,6 +30,7 @@ ThemeData lightTheme = ThemeData(
   ),
   bottomSheetTheme: BottomSheetThemeData(
     backgroundColor: secondColor,
+    clipBehavior: Clip.antiAlias,
   ),
 );
 
@@ -61,5 +62,6 @@ ThemeData darkTheme = ThemeData(
   ),
   bottomSheetTheme: BottomSheetThemeData(
     backgroundColor: firstColor,
+    clipBehavior: Clip.antiAlias,
   ),
 );

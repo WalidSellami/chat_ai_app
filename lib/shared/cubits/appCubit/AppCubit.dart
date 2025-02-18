@@ -27,7 +27,10 @@ class AppCubit extends Cubit<AppStates> {
 
     await FirebaseFirestore.instance.collection('users').doc(uId).get().then((value) {
 
-      userModel = UserModel.fromJson(value.data()!);
+      if(value.data()!['uId'] == uId) {
+        userModel = UserModel.fromJson(value.data()!);
+      }
+
 
       emit(SuccessGetProfileAppState());
 
@@ -77,6 +80,7 @@ class AppCubit extends Cubit<AppStates> {
     emit(SuccessChangeIndexingAppState());
   }
 
+  // When chat is removed
   void selectAndChangeIndexing({
     required int gIndex,
     required int innerIndex,
@@ -479,7 +483,7 @@ class AppCubit extends Cubit<AppStates> {
     generateHistOfMsgs(role: 'user', text: message);
 
     await DioHelper.postData(
-        pathUrl: '/models/gemini-1.0-pro:generateContent',
+        pathUrl: '/models/gemini-1.5-flash:generateContent',
         data: {
           'contents': historyMessages,
           'generationConfig': generationConfig,
@@ -538,8 +542,8 @@ class AppCubit extends Cubit<AppStates> {
           } else {
             await Future.wait([
               generateHistOfImgMsg(role: 'user',
-                  imageUrl: msg['image_url'], text: msg['message'])]).then((value) {
-            });
+                  imageUrl: msg['image_url'],
+                  text: msg['message'])]);
           }
         } else {
           generateHistOfMsgs(role: 'model', text: msg['message']);
@@ -635,7 +639,8 @@ class AppCubit extends Cubit<AppStates> {
       await removeAllMessages(idChat: idChat);
     }
 
-    await FirebaseFirestore.instance.collection('users').doc(uId).collection('chats').doc(idChat).delete().then((value) {
+    await FirebaseFirestore.instance.collection('users').doc(uId).collection('chats').doc(idChat)
+        .delete().then((value) {
 
       getChats();
       if(isChatSelected) {getMessages(idChat: idChat);}
@@ -711,19 +716,29 @@ class AppCubit extends Cubit<AppStates> {
 
   Future<void> getImage(source) async {
 
-    final pickedFile = await picker.pickImage(source: source);
+    try {
 
-    if(pickedFile != null) {
+      final pickedFile = await picker.pickImage(source: source);
 
-      image = XFile(pickedFile.path);
-      imageUpload = image;
-      emit(SuccessGetImageAppState());
+      if(pickedFile != null) {
+        if(File(pickedFile.path).lengthSync() < 5242880) {
+          image = XFile(pickedFile.path);
+          imageUpload = image;
+          emit(SuccessGetImageAppState());
+        } else {
+          emit(ErrorGetImageAppState('file-size'));
+        }
+      } else {
+        emit(ErrorGetImageAppState('Error ...'));
+      }
 
-    } else {
+    } catch (e) {
 
-      emit(ErrorGetImageAppState());
+      emit(ErrorGetImageAppState(e.toString()));
 
     }
+
+
   }
 
 

@@ -5,6 +5,7 @@ import 'package:chat_ai/presentation/modules/startUpModule/signInScreen/SignInSc
 import 'package:chat_ai/presentation/modules/startUpModule/signUpScreen/SignUpScreen.dart';
 import 'package:chat_ai/shared/components/Components.dart';
 import 'package:chat_ai/shared/components/Constants.dart';
+import 'package:chat_ai/shared/components/Extensions.dart';
 import 'package:chat_ai/shared/cubits/checkCubit/CheckCubit.dart';
 import 'package:chat_ai/shared/cubits/checkCubit/CheckStates.dart';
 import 'package:chat_ai/shared/cubits/signInCubit/SignInCubit.dart';
@@ -17,7 +18,6 @@ import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hexcolor/hexcolor.dart';
 
 class AuthOptionsScreen extends StatefulWidget {
   const AuthOptionsScreen({super.key});
@@ -49,6 +49,7 @@ class _AuthOptionsScreenState extends State<AuthOptionsScreen> {
 
             return BlocConsumer<SignInCubit, SignInStates>(
               listener: (context, state) {
+
                 if (state is SuccessCreateAccountGoogleSignInState) {
                   showFlutterToast(
                       message: 'Sign in done successfully',
@@ -59,9 +60,11 @@ class _AuthOptionsScreenState extends State<AuthOptionsScreen> {
                       .then((value) {
                     uId = state.userModel.uId;
 
-                    Navigator.pop(context);
-                    navigateAndNotReturn(
-                        context: context, screen: const ChatScreen());
+                    if(context.mounted) {
+                      Navigator.pop(context);
+                      navigateAndNotReturn(
+                          context: context, screen: const ChatScreen());
+                    }
 
                     setState(() {isAnimate = true;});
                   });
@@ -77,9 +80,11 @@ class _AuthOptionsScreenState extends State<AuthOptionsScreen> {
                       .then((value) {
                     uId = state.userId;
 
-                    Navigator.pop(context);
-                    navigateAndNotReturn(
-                        context: context, screen: const ChatScreen());
+                    if(context.mounted) {
+                      Navigator.pop(context);
+                      navigateAndNotReturn(
+                          context: context, screen: const ChatScreen());
+                    }
 
                     setState(() {isAnimate = true;});
                   });
@@ -114,7 +119,7 @@ class _AuthOptionsScreenState extends State<AuthOptionsScreen> {
 
                 return PopScope(
                   canPop: false,
-                  onPopInvoked: (v) {
+                  onPopInvokedWithResult: (didPop, result) {
                     showAlertExit(context);
                   },
                   child: Scaffold(
@@ -155,7 +160,7 @@ class _AuthOptionsScreenState extends State<AuthOptionsScreen> {
                         FadeInUp(
                           duration: const Duration(milliseconds: 400),
                           child: Material(
-                            clipBehavior: Clip.antiAliasWithSaveLayer,
+                            clipBehavior: Clip.antiAlias,
                             borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(24.0),
                               topRight: Radius.circular(24.0),
@@ -181,13 +186,11 @@ class _AuthOptionsScreenState extends State<AuthOptionsScreen> {
                                             context: context);
                                       }
                                     },
-                                    child: const Row(
+                                    child: Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Icon(EvaIcons.google),
-                                        SizedBox(
-                                          width: 8.0,
-                                        ),
+                                        8.0.hrSpace,
                                         Text(
                                           'Sign in with google',
                                           style: TextStyle(
@@ -197,9 +200,7 @@ class _AuthOptionsScreenState extends State<AuthOptionsScreen> {
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(
-                                    height: 20.0,
-                                  ),
+                                  20.0.vrSpace,
                                   OutlinedButton(
                                     onPressed: () {
                                       if(checkCubit.hasInternet) {
@@ -211,13 +212,11 @@ class _AuthOptionsScreenState extends State<AuthOptionsScreen> {
                                             context: context);
                                       }
                                     },
-                                    child: const Row(
+                                    child: Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Icon(EvaIcons.emailOutline),
-                                        SizedBox(
-                                          width: 8.0,
-                                        ),
+                                        8.0.hrSpace,
                                         Text(
                                           'Sign in with email',
                                           style: TextStyle(
@@ -227,9 +226,7 @@ class _AuthOptionsScreenState extends State<AuthOptionsScreen> {
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(
-                                    height: 20.0,
-                                  ),
+                                  20.0.vrSpace,
                                   OutlinedButton(
                                     onPressed: () {
                                       if(checkCubit.hasInternet) {
@@ -241,13 +238,11 @@ class _AuthOptionsScreenState extends State<AuthOptionsScreen> {
                                             context: context);
                                       }
                                     },
-                                    child: const Row(
+                                    child: Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Icon(EvaIcons.emailOutline),
-                                        SizedBox(
-                                          width: 8.0,
-                                        ),
+                                        8.0.hrSpace,
                                         Text(
                                           'Sign up with email',
                                           style: TextStyle(

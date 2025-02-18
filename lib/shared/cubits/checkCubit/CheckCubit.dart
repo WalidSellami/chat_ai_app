@@ -3,7 +3,7 @@ import 'package:chat_ai/shared/styles/Colors.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:overlay_support/overlay_support.dart';
 
 class CheckCubit extends Cubit<CheckStates> {
@@ -13,16 +13,16 @@ class CheckCubit extends Cubit<CheckStates> {
   static CheckCubit get(context) => BlocProvider.of(context);
 
 
-  bool hasInternet = false;
+  bool hasInternet = true;
 
   bool isSplashScreen = true;
 
 
   void checkConnection() {
 
-    InternetConnectionChecker().onStatusChange.listen((event) {
+    InternetConnection().onStatusChange.listen((event) {
 
-      final bool isConnected = event == InternetConnectionStatus.connected;
+      final bool isConnected = (event == InternetStatus.connected);
       hasInternet = isConnected;
 
       (!isSplashScreen) ? showSimpleNotification(

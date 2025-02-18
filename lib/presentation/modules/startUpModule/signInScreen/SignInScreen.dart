@@ -5,6 +5,7 @@ import 'package:chat_ai/presentation/modules/startUpModule/forgotPassScreen/Forg
 import 'package:chat_ai/shared/adaptive/loadingIndicator/LoadingIndicator.dart';
 import 'package:chat_ai/shared/components/Components.dart';
 import 'package:chat_ai/shared/components/Constants.dart';
+import 'package:chat_ai/shared/components/Extensions.dart';
 import 'package:chat_ai/shared/cubits/checkCubit/CheckCubit.dart';
 import 'package:chat_ai/shared/cubits/checkCubit/CheckStates.dart';
 import 'package:chat_ai/shared/cubits/signInCubit/SignInCubit.dart';
@@ -76,7 +77,9 @@ class _SignInScreenState extends State<SignInScreen> {
 
                   uId = state.userId;
 
-                  navigateAndNotReturn(context: context, screen: const ChatScreen());
+                  if(context.mounted) {
+                    navigateAndNotReturn(context: context, screen: const ChatScreen());
+                  }
 
                 });
 
@@ -105,115 +108,85 @@ class _SignInScreenState extends State<SignInScreen> {
 
             var cubit = SignInCubit.get(context);
 
-            return Scaffold(
-              appBar: defaultAppBar(
-                onPress: () {
+            return GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragEnd: (details) {
+                if (details.primaryVelocity != null && details.primaryVelocity! > 0) {
+                  focusNode1.unfocus();
+                  focusNode2.unfocus();
                   Navigator.pop(context);
-                },
-              ),
-              body: FadeInRight(
-                duration: const Duration(milliseconds: 400),
-                child: Center(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Form(
-                        key: formKey,
-                        child: Column(
-                          children: [
-                            Image.asset('assets/images/logo.png',
-                              height: 100.0,
-                              width: 100.0,
-                            ),
-                            const SizedBox(
-                              height: 45.0,
-                            ),
-                            defaultFormField(
-                                label: 'Email',
-                                controller: emailController,
-                                type: TextInputType.emailAddress,
-                                focusNode: focusNode1,
-                                prefixIcon: EvaIcons.emailOutline,
-                                validate: (value) {
-                                  if(value == null || value.isEmpty) {
-                                    return 'Email must not be empty';
-                                  }
-                                  bool emailValid = RegExp(
-                                      r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$')
-                                      .hasMatch(value);
-                                  if (!emailValid) {
-                                    return 'Enter a valid email!';
-                                  }
-                                  return null;
-                                }
-                            ),
-                            const SizedBox(
-                              height: 30.0,
-                            ),
-                            defaultFormField(
-                                label: 'Password',
-                                controller: passwordController,
-                                type: TextInputType.visiblePassword,
-                                focusNode: focusNode2,
-                                isPassword: isPassword,
-                                prefixIcon: Icons.lock_outline_rounded,
-                                suffixIcon: isPassword ? Icons.visibility_off : Icons.visibility,
-                                onPress: () {
-                                  setState(() {
-                                    isPassword = !isPassword;
-                                  });
-                                },
-                                validate: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Password must not be empty';
-                                  }
-                                  if (value.length < 8) {
-                                    return 'Password must be at least 8 characters';
-                                  }
-                                  return null;
-                                },
-                                onSubmit: (value) {
-                                  focusNode1.unfocus();
-                                  focusNode2.unfocus();
-                                  if(checkCubit.hasInternet) {
-                                    if(formKey.currentState!.validate()) {
-                                      cubit.userSignIn(
-                                          email: emailController.text,
-                                          password: passwordController.text);
-                                    }
-                                  } else {
-                                    showFlutterToast(
-                                        message: 'No Internet Connection',
-                                        state: ToastStates.error,
-                                        context: context);
-                                  }
-                                }
-                            ),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: defaultTextButton(
-                                text: 'Forgot password?',
-                                onPress: () {
-                                  if(checkCubit.hasInternet) {
-                                    Navigator.of(context).push(createRoute(screen: const ForgotPassScreen()));
-                                  } else {
-                                    showFlutterToast(
-                                        message: 'No Internet Connection',
-                                        state: ToastStates.error,
-                                        context: context);
-                                  }
-                                },
+                }
+              },
+              child: Scaffold(
+                appBar: defaultAppBar(
+                  onPress: () {
+                    focusNode1.unfocus();
+                    focusNode2.unfocus();
+                    Navigator.pop(context);
+                  },
+                ),
+                body: FadeInRight(
+                  duration: const Duration(milliseconds: 500),
+                  child: Center(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Form(
+                          key: formKey,
+                          child: Column(
+                            children: [
+                              ZoomIn(
+                                duration: Duration(milliseconds: 500),
+                                child: Image.asset('assets/images/logo.png',
+                                  height: 100.0,
+                                  width: 100.0,
+                                ),
                               ),
-                            ),
-                            const SizedBox(
-                              height: 30.0,
-                            ),
-                            ConditionalBuilder(
-                              condition: state is! LoadingSignInState,
-                              builder: (context) => defaultButton(
-                                  text: 'Sign In',
+                              45.0.vrSpace,
+                              defaultFormField(
+                                  label: 'Email',
+                                  controller: emailController,
+                                  type: TextInputType.emailAddress,
+                                  focusNode: focusNode1,
+                                  prefixIcon: EvaIcons.emailOutline,
+                                  validate: (value) {
+                                    if(value == null || value.isEmpty) {
+                                      return 'Email must not be empty';
+                                    }
+                                    bool emailValid = RegExp(
+                                        r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$')
+                                        .hasMatch(value);
+                                    if (!emailValid) {
+                                      return 'Enter a valid email!';
+                                    }
+                                    return null;
+                                  }
+                              ),
+                              30.0.vrSpace,
+                              defaultFormField(
+                                  label: 'Password',
+                                  controller: passwordController,
+                                  type: TextInputType.visiblePassword,
+                                  focusNode: focusNode2,
+                                  isPassword: isPassword,
+                                  prefixIcon: Icons.lock_outline_rounded,
+                                  suffixIcon: isPassword ? Icons.visibility_off : Icons.visibility,
                                   onPress: () {
+                                    setState(() {
+                                      isPassword = !isPassword;
+                                    });
+                                  },
+                                  validate: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Password must not be empty';
+                                    }
+                                    if (value.length < 8) {
+                                      return 'Password must be at least 8 characters';
+                                    }
+                                    return null;
+                                  },
+                                  onSubmit: (value) {
                                     focusNode1.unfocus();
                                     focusNode2.unfocus();
                                     if(checkCubit.hasInternet) {
@@ -228,11 +201,50 @@ class _SignInScreenState extends State<SignInScreen> {
                                           state: ToastStates.error,
                                           context: context);
                                     }
+                                  }
+                              ),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: defaultTextButton(
+                                  text: 'Forgot password?',
+                                  onPress: () {
+                                    if(checkCubit.hasInternet) {
+                                      Navigator.of(context).push(createRoute(screen: const ForgotPassScreen()));
+                                    } else {
+                                      showFlutterToast(
+                                          message: 'No Internet Connection',
+                                          state: ToastStates.error,
+                                          context: context);
+                                    }
                                   },
-                                  context: context),
-                              fallback: (context) => Center(child: LoadingIndicator(os: getOs())),
-                            ),
-                          ],
+                                ),
+                              ),
+                              30.0.vrSpace,
+                              ConditionalBuilder(
+                                condition: state is! LoadingSignInState,
+                                builder: (context) => defaultButton(
+                                    text: 'Sign In',
+                                    onPress: () {
+                                      focusNode1.unfocus();
+                                      focusNode2.unfocus();
+                                      if(checkCubit.hasInternet) {
+                                        if(formKey.currentState!.validate()) {
+                                          cubit.userSignIn(
+                                              email: emailController.text,
+                                              password: passwordController.text);
+                                        }
+                                      } else {
+                                        showFlutterToast(
+                                            message: 'No Internet Connection',
+                                            state: ToastStates.error,
+                                            context: context);
+                                      }
+                                    },
+                                    context: context),
+                                fallback: (context) => Center(child: LoadingIndicator(os: getOs())),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

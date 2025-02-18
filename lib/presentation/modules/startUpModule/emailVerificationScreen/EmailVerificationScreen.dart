@@ -4,6 +4,7 @@ import 'package:chat_ai/presentation/modules/chatModule/ChatScreen.dart';
 import 'package:chat_ai/shared/adaptive/loadingIndicator/LoadingIndicator.dart';
 import 'package:chat_ai/shared/components/Components.dart';
 import 'package:chat_ai/shared/components/Constants.dart';
+import 'package:chat_ai/shared/components/Extensions.dart';
 import 'package:chat_ai/shared/cubits/checkCubit/CheckCubit.dart';
 import 'package:chat_ai/shared/cubits/checkCubit/CheckStates.dart';
 import 'package:chat_ai/shared/cubits/signUpCubit/SignUpCubit.dart';
@@ -117,9 +118,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
               return PopScope(
                 canPop: false,
-                onPopInvoked: (v) {
+                onPopInvokedWithResult: (didPop, result) {
                   showFlutterToast(
-                      message: 'Verify your email',
+                      message: 'Verify your email!',
                       state: ToastStates.warning,
                       context: context);
                 },
@@ -137,7 +138,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   body: ConditionalBuilder(
                     condition: !cubit.isVerified,
                     builder: (context) => FadeInRight(
-                      duration: const Duration(milliseconds: 300),
+                      duration: const Duration(milliseconds: 500),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -146,9 +147,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                             EvaIcons.emailOutline,
                             size: 60.0,
                           ),
-                          const SizedBox(
-                            height: 30.0,
-                          ),
+                          30.0.vrSpace,
                           const Text(
                             'Check Your Email',
                             style: TextStyle(
@@ -157,9 +156,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(
-                            height: 30.0,
-                          ),
+                         30.0.vrSpace,
                           Text.rich(
                             textAlign: TextAlign.center,
                             style: const TextStyle(
@@ -182,9 +179,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                                   ),
                                 ]),
                           ),
-                          const SizedBox(
-                            height: 30.0,
-                          ),
+                          30.0.vrSpace,
                           (sec > 0)
                               ? Text(
                                   '$sec',
@@ -225,7 +220,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       ),
                     ),
                     fallback: (context) => FadeInDown(
-                      duration: const Duration(milliseconds: 300),
+                      duration: const Duration(milliseconds: 500),
                       child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -234,9 +229,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                               EvaIcons.checkmarkSquare2Outline,
                               size: 60.0,
                             ),
-                            const SizedBox(
-                              height: 30.0,
-                            ),
+                            30.0.vrSpace,
                             const Text(
                               'Email Verified',
                               style: TextStyle(
@@ -245,9 +238,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(
-                              height: 45.0,
-                            ),
+                           45.0.vrSpace,
                             ConditionalBuilder(
                               condition: !isLoading,
                               builder: (context) => defaultButton(
@@ -260,16 +251,20 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                                           milliseconds: 1500))
                                           .then((value) {
                                         setState(() {isLoading = false;});
-                                        showFlutterToast(
-                                            message: 'Done with success',
-                                            state: ToastStates.success,
-                                            context: context);
+                                        if(context.mounted) {
+                                          showFlutterToast(
+                                              message: 'Done with success',
+                                              state: ToastStates.success,
+                                              context: context);
+                                        }
                                         CacheHelper.saveCachedData(key: 'uId', value: widget.userId).then((value) {
                                           uId = widget.userId;
                                           cubit.updateStatus(userId: widget.userId ?? uId);
-                                          navigateAndNotReturn(
-                                              context: context,
-                                              screen: const ChatScreen());
+                                          if(context.mounted) {
+                                            navigateAndNotReturn(
+                                                context: context,
+                                                screen: const ChatScreen());
+                                          }
                                         });
                                       });
                                     } else {

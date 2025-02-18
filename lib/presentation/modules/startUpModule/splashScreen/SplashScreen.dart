@@ -2,6 +2,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:chat_ai/shared/adaptive/loadingIndicator/LoadingIndicatorKit.dart';
 import 'package:chat_ai/shared/components/Components.dart';
 import 'package:chat_ai/shared/components/Constants.dart';
+import 'package:chat_ai/shared/components/Extensions.dart';
 import 'package:chat_ai/shared/cubits/appCubit/AppCubit.dart';
 import 'package:chat_ai/shared/cubits/checkCubit/CheckCubit.dart';
 import 'package:chat_ai/shared/cubits/checkCubit/CheckStates.dart';
@@ -32,9 +33,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
     Future.delayed(const Duration(seconds: 1)).then((value) {
 
+      if(!mounted) return;
       if(CheckCubit.get(context).hasInternet == true) {
+
         if(uId != null) AppCubit.get(context).getProfile();
         Future.delayed(const Duration(milliseconds: 800)).then((value) {
+
+          if(!mounted) return;
           navigateAndNotReturn(context: context, screen: widget.startWidget);
           CheckCubit.get(context).changeStatus();
 
@@ -60,7 +65,10 @@ class _SplashScreenState extends State<SplashScreen> {
                     isChecking = false;
                     isShowed = true;
                   });
-                  showAlertCheckConnection(context, isSplashScreen: true);
+                  if(!mounted) return;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    showAlertCheckConnection(context, isSplashScreen: true);
+                  });
                 }
               }
             });
@@ -83,7 +91,9 @@ class _SplashScreenState extends State<SplashScreen> {
             Future.delayed(const Duration(milliseconds: 800)).then((value) {
               setState(() {isDisconnected = true;});
               if(isChecking) setState(() {isChecking = false;});
-              if(!isShowed) showAlertCheckConnection(context, isSplashScreen: true);
+              if(context.mounted) {
+                if(!isShowed) showAlertCheckConnection(context, isSplashScreen: true);
+              }
             });
           }
         }
@@ -105,27 +115,34 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                 ),
               ),
-              if(isChecking) ...[
-                FadeInUp(
-                  duration: const Duration(milliseconds: 500),
-                  child: const Text(
-                    'Checking for connection ...',
-                    style: TextStyle(
-                      fontSize: 15.0,
-                      letterSpacing: 0.6,
-                    ),
+              AnimatedSize(
+                  duration: Duration(milliseconds: 700),
+                  clipBehavior: Clip.antiAlias,
+                  curve: Curves.easeInOut,
+                  child: Column(
+                    children: [
+                      if(isChecking) ...[
+                        FadeInUp(
+                          duration: const Duration(milliseconds: 500),
+                          child: const Text(
+                            'Checking for connection ...',
+                            style: TextStyle(
+                              fontSize: 15.0,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                        ),
+                       20.0.vrSpace,
+                        FadeInUp(
+                            duration: const Duration(milliseconds: 800),
+                            child: LoadingIndicatorKit(os: getOs())),
+                        const SizedBox(
+                          height: 20.0,
+                        ),
+                      ],
+                    ],
                   ),
-                ),
-                const SizedBox(
-                  height: 20.0,
-                ),
-                FadeInUp(
-                    duration: const Duration(milliseconds: 800),
-                    child: LoadingIndicatorKit(os: getOs())),
-                const SizedBox(
-                  height: 20.0,
-                ),
-              ],
+              ),
             ],
           ),
         );

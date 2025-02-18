@@ -7,6 +7,7 @@ import 'package:chat_ai/presentation/modules/startUpModule/authOptionsScreen/Aut
 import 'package:chat_ai/shared/adaptive/loadingIndicator/LoadingIndicator.dart';
 import 'package:chat_ai/shared/components/Components.dart';
 import 'package:chat_ai/shared/components/Constants.dart';
+import 'package:chat_ai/shared/components/Extensions.dart';
 import 'package:chat_ai/shared/cubits/appCubit/AppCubit.dart';
 import 'package:chat_ai/shared/cubits/appCubit/AppStates.dart';
 import 'package:chat_ai/shared/cubits/checkCubit/CheckCubit.dart';
@@ -103,7 +104,7 @@ class _ChatScreenState extends State<ChatScreen>
     showToast(
       text,
       context: context,
-      backgroundColor: Colors.grey.shade800.withOpacity(.9),
+      backgroundColor: Colors.grey.shade800.withPredefinedOpacity(0.9),
       animation: StyledToastAnimation.scale,
       reverseAnimation: StyledToastAnimation.fade,
       position: StyledToastPosition.bottom,
@@ -400,22 +401,41 @@ class _ChatScreenState extends State<ChatScreen>
                     });
                   }
 
-                  if (state is SuccessGetImageAppState ||
-                      state is ErrorGetImageAppState) {
-                    if(getSizeImage(cubit) > 5242880) { // 5MB
-                      cubit.clearImage();
+                  if (state is SuccessGetImageAppState) {
+                    Navigator.pop(context);
+                  }
+
+                  if(state is ErrorGetImageAppState) {
+                    if(state.error == 'file-size') {
+                     Future.delayed(const Duration(milliseconds: 300)).then((value) {
+
+                          if(context.mounted) {
+                            showFlutterToast(
+                                message: 'Image is bigger than 5MB',
+                                state: ToastStates.error,
+                                position: (isHasFocus) ?
+                                StyledToastPosition.center :
+                                StyledToastPosition.bottom,
+                                context: context);
+                          }
+                        });
+                    } else {
                       Future.delayed(const Duration(milliseconds: 300)).then((value) {
-                        showFlutterToast(
-                            message: 'Image is bigger than 5MB',
-                            state: ToastStates.error,
-                            position: (isHasFocus) ?
-                            StyledToastPosition.center :
-                            StyledToastPosition.bottom,
-                            context: context);
+
+                        if(context.mounted) {
+                          showFlutterToast(
+                              message: 'Error ... Try again!',
+                              state: ToastStates.error,
+                              position: (isHasFocus) ?
+                              StyledToastPosition.center :
+                              StyledToastPosition.bottom,
+                              context: context);
+                        }
                       });
                     }
                     Navigator.pop(context);
                   }
+
 
                   if (state is SuccessRenameChatAppState) {
                     showFlutterToast(
@@ -479,18 +499,21 @@ class _ChatScreenState extends State<ChatScreen>
                     Future.delayed(const Duration(milliseconds: 1200))
                         .then((value) {
                       CacheHelper.removeCachedData(key: 'uId').then((value) {
-                        if (value == true) {
-                          Navigator.pop(context);
-                          navigateAndNotReturn(
-                              context: context,
-                              screen: const AuthOptionsScreen());
-                          Future.delayed(const Duration(milliseconds: 500))
-                              .then((value) {
-                            cubit.clearMessages();
-                            cubit.clearChats();
-                            cubit.clearIndexing();
-                          });
+                        if(context.mounted) {
+                          if (value == true) {
+                            Navigator.pop(context);
+                            navigateAndNotReturn(
+                                context: context,
+                                screen: const AuthOptionsScreen());
+                            Future.delayed(const Duration(milliseconds: 500))
+                                .then((value) {
+                              cubit.clearMessages();
+                              cubit.clearChats();
+                              cubit.clearIndexing();
+                            });
+                          }
                         }
+
                       });
                     });
                   }
@@ -507,15 +530,16 @@ class _ChatScreenState extends State<ChatScreen>
                   var cubit = AppCubit.get(context);
 
                   return GestureDetector(
+                    behavior: HitTestBehavior.translucent,
                     onHorizontalDragEnd: (details) {
-                      if (details.primaryVelocity! > 0) {
+                      if (details.primaryVelocity != null && details.primaryVelocity! > 0) {
                         if(isHasFocus) focusNode.unfocus();
                         scaffoldKey.currentState?.openDrawer();
                       }
                     },
                     child: PopScope(
                       canPop: canExit,
-                      onPopInvoked: (v) {
+                      onPopInvokedWithResult: (didPop, result) {
                         if(isHasFocus) focusNode.unfocus();
                         exit(timeBackPressed);
                       },
@@ -612,18 +636,16 @@ class _ChatScreenState extends State<ChatScreen>
                                       itemBuilder: (context, index) =>
                                           buildItemMessage(
                                               cubit.messages[index], index),
-                                      separatorBuilder: (context, index) =>
-                                          const SizedBox(height: 20.0,),
+                                      separatorBuilder: (context, index) => 20.0.vrSpace,
                                       itemCount: cubit.messages.length,
                                     ),
                                   ),
-                                  fallback: (context) => (checkCubit
-                                          .hasInternet)
+                                  fallback: (context) => (checkCubit.hasInternet)
                                       ? Padding(
                                           padding: const EdgeInsets.all(20.0),
                                           child: Column(
                                             children: [
-                                              if ((!isHasFocus && cubit.image == null) &&
+                                              if ((!isHasFocus && !isStartListening && cubit.image == null) &&
                                                   (!isLoading && !isMicLoading)) ...[
                                                 ZoomIn(
                                                   duration: const Duration(
@@ -637,9 +659,7 @@ class _ChatScreenState extends State<ChatScreen>
                                                     ),
                                                   ),
                                                 ),
-                                                const SizedBox(
-                                                  height: 35.0,
-                                                ),
+                                               35.0.vrSpace,
                                                 FadeInRight(
                                                   duration: const Duration(
                                                       milliseconds: 500),
@@ -656,9 +676,7 @@ class _ChatScreenState extends State<ChatScreen>
                                                     ),
                                                   ),
                                                 ),
-                                                const SizedBox(
-                                                  height: 12.0,
-                                                ),
+                                               12.0.vrSpace,
                                                 FadeInRight(
                                                   duration: const Duration(
                                                       milliseconds: 500),
@@ -666,7 +684,7 @@ class _ChatScreenState extends State<ChatScreen>
                                                     'Tell me what\'s on your mind.',
                                                     textAlign: TextAlign.center,
                                                     style: TextStyle(
-                                                      fontSize: 19.0,
+                                                      fontSize: 18.0,
                                                     ),
                                                   ),
                                                 ),
@@ -677,8 +695,7 @@ class _ChatScreenState extends State<ChatScreen>
                                                   child: Center(
                                                     child: Text(
                                                       cubit.statusText,
-                                                      textAlign:
-                                                          TextAlign.center,
+                                                      textAlign: TextAlign.center,
                                                       style: const TextStyle(
                                                         fontSize: 18.0,
                                                         letterSpacing: 0.6,
@@ -719,9 +736,7 @@ class _ChatScreenState extends State<ChatScreen>
                                         ),
                                 ),
                               ),
-                              const SizedBox(
-                                height: 8.0,
-                              ),
+                              8.0.vrSpace,
                               FadeInUp(
                                 duration: const Duration(milliseconds: 400),
                                 child: Material(
@@ -736,16 +751,14 @@ class _ChatScreenState extends State<ChatScreen>
                                     ),
                                     child: Column(
                                       children: [
-                                        if (cubit.image != null && (getSizeImage(cubit) <= 5242880)) ...[
+                                        if (cubit.image != null) ...[
                                           FadeInDown(
                                             duration:
                                                 const Duration(milliseconds: 300),
                                             child: buildImageUpload(
                                                 cubit, themeCubit),
                                           ),
-                                          const SizedBox(
-                                            height: 10.0,
-                                          ),
+                                          10.0.vrSpace,
                                         ],
                                         Row(
                                           children: [
@@ -769,8 +782,7 @@ class _ChatScreenState extends State<ChatScreen>
                                                   icon: Icons
                                                       .add_photo_alternate_outlined,
                                                   color: themeCubit.isDarkTheme
-                                                      ? Colors.grey.shade700
-                                                          .withOpacity(.7)
+                                                      ? Colors.grey.shade700.withPredefinedOpacity(0.7)
                                                       : Colors.white,
                                                   colorIcon:
                                                       themeCubit.isDarkTheme
@@ -778,9 +790,7 @@ class _ChatScreenState extends State<ChatScreen>
                                                           : Colors.black,
                                                 ),
                                               ),
-                                            const SizedBox(
-                                              width: 10.0,
-                                            ),
+                                          10.0.hrSpace,
                                             Expanded(
                                               child: (!isMicActive)
                                                   ? FadeInUp(
@@ -840,7 +850,7 @@ class _ChatScreenState extends State<ChatScreen>
                                                         },
                                                         validator: (value) {
                                                           if (value != null &&
-                                                              value.length > 10000) {
+                                                              value.length > 8500) {
                                                             return 'Text is too large';
                                                           }
                                                           return null;
@@ -888,8 +898,7 @@ class _ChatScreenState extends State<ChatScreen>
                                                                       context)
                                                                   .colorScheme
                                                                   .primary
-                                                                  .withOpacity(
-                                                                      .2),
+                                                                  .withPredefinedOpacity(0.2),
                                                               glowShape:
                                                                   BoxShape.circle,
                                                               animate:
@@ -908,8 +917,7 @@ class _ChatScreenState extends State<ChatScreen>
                                                                             .shade300
                                                                         : Colors
                                                                             .black54
-                                                                            .withOpacity(
-                                                                                .1))
+                                                                            .withPredefinedOpacity(0.1))
                                                                     : Theme.of(
                                                                             context)
                                                                         .colorScheme
@@ -946,9 +954,7 @@ class _ChatScreenState extends State<ChatScreen>
                                                       ),
                                                     ),
                                             ),
-                                            const SizedBox(
-                                              width: 10.0,
-                                            ),
+                                            10.0.hrSpace,
                                             ConditionalBuilder(
                                               condition: !isLoading,
                                               builder: (context) => Visibility(
@@ -1080,7 +1086,7 @@ class _ChatScreenState extends State<ChatScreen>
                                                         : Icons.close_rounded,
                                                     color: themeCubit.isDarkTheme
                                                         ? Colors.grey.shade700
-                                                            .withOpacity(.7)
+                                                            .withPredefinedOpacity(0.7)
                                                         : Colors.white,
                                                     colorIcon:
                                                         themeCubit.isDarkTheme
@@ -1112,17 +1118,11 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
 
-  int getSizeImage(cubit) {
-    int sizeImage = File(cubit.image.path).lengthSync();
-    return sizeImage;
-  }
-
-
   // Upload Images From Device
   Widget buildImageUpload(cubit, themeCubit) => FadeInDown(
     duration: const Duration(milliseconds: 300),
     child: SizedBox(
-          width: 155.0,
+          width: 145.0,
           height: 135.0,
           child: Stack(
             alignment: Alignment.topRight,
@@ -1138,18 +1138,11 @@ class _ChatScreenState extends State<ChatScreen>
                     fit: BoxFit.cover,
                     frameBuilder:
                         (context, child, frame, wasSynchronouslyLoaded) {
-                      if (frame == null) {
-                        return Container(
-                          width: 100.0,
-                          height: 100.0,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(
-                              10.0,
-                            ),
-                            color: Colors.blue.shade800,
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                        );
+                      if (frame != null) {
+                        return showShimmerLoading(
+                            width: 100.0,
+                            height: 100.0,
+                            radius: 10.0);
                       }
                       return FadeIn(
                           duration: const Duration(milliseconds: 200),
@@ -1169,10 +1162,8 @@ class _ChatScreenState extends State<ChatScreen>
                         child: Center(
                           child: Icon(
                             Icons.error_outline_rounded,
-                            size: 24.0,
-                            color: themeCubit.isDarkTheme
-                                ? Colors.white
-                                : Colors.black,
+                            size: 28.0,
+                            color: Colors.white,
                           ),
                         ),
                       );
@@ -1189,7 +1180,7 @@ class _ChatScreenState extends State<ChatScreen>
                 function: () {cubit.clearImage(isClearAll: true);},
                 icon: Icons.close_rounded,
                 color: themeCubit.isDarkTheme
-                    ? Colors.grey.shade700.withOpacity(.7)
+                    ? Colors.grey.shade700.withPredefinedOpacity(0.7)
                     : Colors.white,
                 colorIcon: themeCubit.isDarkTheme ? Colors.white : Colors.black,
               ),
@@ -1260,25 +1251,26 @@ class _ChatScreenState extends State<ChatScreen>
         },
       );
 
-  dynamic showShimmerLoading(
-          {required double width,
-          required double height,
-          required double radius}) =>
+  dynamic showShimmerLoading({
+    required double width,
+    required double height,
+    required double radius}) =>
       Shimmer.fromColors(
-        baseColor: Colors.blue.shade900.withOpacity(.8),
-        highlightColor: Colors.indigo.shade900,
-        child: Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(radius),
-            color: ThemeCubit.get(context).isDarkTheme ?
-            Colors.indigo.shade900.withOpacity(.9) :
-            Colors.indigo.shade900.withOpacity(.7),
-          ),
-          clipBehavior: Clip.antiAlias,
+      baseColor: Colors.blue.shade900.withPredefinedOpacity(.8),
+      highlightColor: Colors.indigo.shade900,
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(radius),
+          color: ThemeCubit.get(context).isDarkTheme ?
+          Colors.indigo.shade900.withPredefinedOpacity(.9) :
+          Colors.indigo.shade900.withPredefinedOpacity(.7),
         ),
-      );
+        clipBehavior: Clip.antiAlias,
+      ),
+    );
+
 
 
   bool isSearchCalled = false;
@@ -1354,9 +1346,7 @@ class _ChatScreenState extends State<ChatScreen>
                                 ),
                               ],
                             ),
-                            const SizedBox(
-                              height: 14.0,
-                            ),
+                           14.0.vrSpace,
                             Padding(
                               padding: const EdgeInsets.only(
                                 left: 2.0,
@@ -1382,9 +1372,7 @@ class _ChatScreenState extends State<ChatScreen>
                           thickness: 0.6,
                         ),
                       ),
-                      const SizedBox(
-                        height: 8.0,
-                      ),
+                      8.0.vrSpace,
                       Expanded(
                         child: Column(
                           children: [
@@ -1430,7 +1418,7 @@ class _ChatScreenState extends State<ChatScreen>
                                                 ? Theme.of(context)
                                                     .colorScheme
                                                     .primary
-                                                    .withOpacity(.3)
+                                                    .withPredefinedOpacity(0.3)
                                                 : Theme.of(context)
                                                     .colorScheme
                                                     .primary,
@@ -1444,7 +1432,7 @@ class _ChatScreenState extends State<ChatScreen>
                                                 ? Theme.of(context)
                                                     .colorScheme
                                                     .primary
-                                                    .withOpacity(.3)
+                                                    .withPredefinedOpacity(0.3)
                                                 : null,
                                       ),
                                       label: Text(
@@ -1457,7 +1445,7 @@ class _ChatScreenState extends State<ChatScreen>
                                               ? Theme.of(context)
                                                   .colorScheme
                                                   .primary
-                                                  .withOpacity(.3)
+                                                  .withPredefinedOpacity(0.3)
                                               : null,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -1474,12 +1462,15 @@ class _ChatScreenState extends State<ChatScreen>
                                             Future.delayed(const Duration(
                                                     milliseconds: 100))
                                                 .then((value) {
-                                              scaffoldKey.currentState
-                                                  ?.closeDrawer();
-                                              Navigator.of(context).push(
-                                                  createSecondRoute(
-                                                      screen:
-                                                          const SearchChatScreen()));
+
+                                                  if(!mounted) return;
+                                                    scaffoldKey.currentState
+                                                        ?.closeDrawer();
+                                                    Navigator.of(context).push(
+                                                        createSecondRoute(
+                                                            screen:
+                                                            const SearchChatScreen()));
+
                                             });
                                           } else {
                                             showFlutterToast(
@@ -1492,15 +1483,13 @@ class _ChatScreenState extends State<ChatScreen>
                                         color: Theme.of(context)
                                             .colorScheme
                                             .primary
-                                            .withOpacity(.9),
+                                            .withPredefinedOpacity(0.9),
                                         colorIcon: Colors.white),
                                   ],
                                 ),
                               ),
                             ),
-                            const SizedBox(
-                              height: 12.0,
-                            ),
+                            12.0.vrSpace,
                             Expanded(
                               child: ConditionalBuilder(
                                 condition:
@@ -1513,8 +1502,10 @@ class _ChatScreenState extends State<ChatScreen>
                                   onRefresh: () async {
                                     await Future.delayed(const Duration(seconds: 2))
                                         .then((value) {
-                                      if (CheckCubit.get(context).hasInternet) {
-                                        AppCubit.get(context).getChats();
+                                      if(context.mounted) {
+                                        if (CheckCubit.get(context).hasInternet) {
+                                          AppCubit.get(context).getChats();
+                                        }
                                       }
                                     });
                                   },
@@ -1568,11 +1559,15 @@ class _ChatScreenState extends State<ChatScreen>
                                                       widget.idSearchChat == idChats[actualIndex]) {
                                                     isSearchCalled = true;
                                                     Future.delayed(const Duration(milliseconds: 200)).then((value) {
-                                                      AppCubit.get(context).changeIndexing(
-                                                          gIndex: i,
-                                                          innerIndex: actualIndex);
-                                                      AppCubit.get(context).clearSearchChatId(
-                                                          idSearchChat: widget.idSearchChat);
+
+                                                      if(context.mounted) {
+                                                        AppCubit.get(context).changeIndexing(
+                                                            gIndex: i,
+                                                            innerIndex: actualIndex);
+                                                        AppCubit.get(context).clearSearchChatId(
+                                                            idSearchChat: widget.idSearchChat);
+                                                      }
+
                                                     });
                                                   }
                                                 }
@@ -1587,10 +1582,7 @@ class _ChatScreenState extends State<ChatScreen>
                                         ],
                                       );
                                     },
-                                    separatorBuilder: (context, index) =>
-                                        const SizedBox(
-                                      height: 24.0,
-                                    ),
+                                    separatorBuilder: (context, index) => 24.0.vrSpace,
                                     itemCount:
                                         AppCubit.get(context).groupedChats.length,
                                   ),
@@ -1729,7 +1721,7 @@ class _ChatScreenState extends State<ChatScreen>
         decoration: BoxDecoration(
           color: ((AppCubit.get(context).globalIndex == gIndex) &&
               (AppCubit.get(context).currentIndex == actualIndex)) ?
-          Theme.of(context).scaffoldBackgroundColor.withOpacity(.9) : null,
+          Theme.of(context).scaffoldBackgroundColor.withPredefinedOpacity(0.9) : null,
           borderRadius: BorderRadius.circular(10.0),
         ),
         child: ListTile(
@@ -1797,8 +1789,6 @@ class _ChatScreenState extends State<ChatScreen>
     required bool isChatSelected,
   }) =>
       showModalBottomSheet(
-        showDragHandle: true,
-        clipBehavior: Clip.antiAlias,
         context: context,
         builder: (BuildContext context) {
           return SafeArea(
@@ -1963,7 +1953,7 @@ class _ChatScreenState extends State<ChatScreen>
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 17.0,
-                color: redColor.withOpacity(.9),
+                color: redColor.withPredefinedOpacity(0.9),
                 letterSpacing: 0.6,
                 fontWeight: FontWeight.bold,
               ),
@@ -2095,9 +2085,7 @@ class _ChatScreenState extends State<ChatScreen>
                                 ),
                               ),
                             ),
-                            const SizedBox(
-                              height: 10.0,
-                            ),
+                           10.0.vrSpace,
                             Text(
                               '${msg['message']}',
                               style: const TextStyle(
@@ -2124,7 +2112,7 @@ class _ChatScreenState extends State<ChatScreen>
                           : Colors.black,
                     ),
                     color: ThemeCubit.get(context).isDarkTheme
-                        ? HexColor('303030').withOpacity(.8)
+                        ? HexColor('303030').withPredefinedOpacity(0.8)
                         : Colors.grey.shade200,
                   ),
                   clipBehavior: Clip.antiAlias,
@@ -2225,11 +2213,13 @@ class _ChatScreenState extends State<ChatScreen>
                     url = 'https://${match.group(0)}';
                   }
                   await lunch(url).then((value) {
+                    if(!mounted) return;
                     showFlutterToast(
                         message: 'Opening ...',
                         state: ToastStates.success,
                         context: context);
                   }).catchError((error) {
+                    if(!mounted) return;
                     showFlutterToast(
                         message: error.toString(),
                         state: ToastStates.error,
@@ -2265,14 +2255,26 @@ class _ChatScreenState extends State<ChatScreen>
           ),
         );
 
-      } else if(codeRegex.hasMatch(match.group(0)!)){
+      } else if(codeRegex.hasMatch(match.group(0)!)) {
         spans.add(
           TextSpan(
-            text: match.group(0),
+            text: match.group(2),
+            recognizer: TapGestureRecognizer()..onTap = () async {
+              if(match.group(2) != '' && match.group(2) != null) {
+                await Clipboard.setData(ClipboardData(text: match.group(2)!));
+              }
+            },
             style: TextStyle(
-              color: ThemeCubit.get(context).isDarkTheme ?
+              color: ThemeCubit
+                  .get(context)
+                  .isDarkTheme ?
               Colors.blueGrey.shade200 : Colors.teal.shade900,
               fontSize: 14.0,
+              backgroundColor: ThemeCubit
+                  .get(context)
+                  .isDarkTheme ?
+              Colors.grey.shade800.withPredefinedOpacity(0.5) :
+              Colors.grey.shade300,
               fontFamily: 'Inconsolata',
             ),
           ),
@@ -2325,96 +2327,99 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
+
   // Vocal Config
   Future<dynamic> langConfig() => showModalBottomSheet(
         showDragHandle: true,
         isDismissible: false,
         enableDrag: false,
-        clipBehavior: Clip.antiAlias,
         context: context,
         builder: (BuildContext context) {
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 12.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text.rich(
-                    textAlign: TextAlign.center,
-                    TextSpan(
-                      text: 'Which lang do you want to use : \n',
-                      children: [
-                        const TextSpan(
-                          text: 'Default is  ',
+          return PopScope(
+            canPop: false,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 12.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text.rich(
+                      textAlign: TextAlign.center,
+                      TextSpan(
+                        text: 'Which lang do you want to use : \n',
+                        children: [
+                          const TextSpan(
+                            text: 'Default is  ',
+                          ),
+                          TextSpan(
+                              text: 'English',
+                              style: TextStyle(
+                                color: greenColor,
+                                height: 2.0,
+                              )),
+                        ],
+                        style: const TextStyle(
+                          fontSize: 17.0,
+                          letterSpacing: 0.6,
+                          fontWeight: FontWeight.bold,
                         ),
-                        TextSpan(
-                            text: 'English',
-                            style: TextStyle(
-                              color: greenColor,
-                              height: 2.0,
-                            )),
-                      ],
-                      style: const TextStyle(
-                        fontSize: 17.0,
-                        letterSpacing: 0.6,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 16.0,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            local = 'ar-DZ';
-                          });
-                          Navigator.pop(context);
-                        },
-                        child: const Text(
-                          'Arabic',
-                          style: TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.bold,
+                    const SizedBox(
+                      height: 16.0,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              local = 'ar-DZ';
+                            });
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Arabic',
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            local = 'en-US';
-                          });
-                          Navigator.pop(context);
-                        },
-                        child: const Text(
-                          'English',
-                          style: TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.bold,
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              local = 'en-US';
+                            });
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'English',
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            local = 'fr-FR';
-                          });
-                          Navigator.pop(context);
-                        },
-                        child: const Text(
-                          'French',
-                          style: TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.bold,
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              local = 'fr-FR';
+                            });
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'French',
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -2425,78 +2430,78 @@ class _ChatScreenState extends State<ChatScreen>
         showDragHandle: true,
         isDismissible: false,
         enableDrag: false,
-        clipBehavior: Clip.antiAlias,
         context: context,
         builder: (BuildContext context) {
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 12.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text.rich(
-                    textAlign: TextAlign.center,
-                    TextSpan(
-                      text: 'Do you want ',
-                      children: [
-                        TextSpan(
-                            text: 'ChatAI ',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                            )),
-                        const TextSpan(
-                          text: 'speak with you?',
+          return PopScope(
+            canPop: false,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 12.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text.rich(
+                      textAlign: TextAlign.center,
+                      TextSpan(
+                        text: 'Do you want ',
+                        children: [
+                          TextSpan(
+                              text: 'ChatAI ',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                              )),
+                          const TextSpan(
+                            text: 'speak with you?',
+                          ),
+                        ],
+                        style: const TextStyle(
+                          fontSize: 17.0,
+                          letterSpacing: 0.6,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                      style: const TextStyle(
-                        fontSize: 17.0,
-                        letterSpacing: 0.6,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 16.0,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      TextButton(
-                        onPressed: () async {
-                          setState(() {
-                            isCanSpeak = false;
-                          });
-                          Navigator.pop(context);
-                          await langConfig();
-                        },
-                        child: const Text(
-                          'No',
-                          style: TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.bold,
+                    16.0.vrSpace,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        TextButton(
+                          onPressed: () async {
+                            setState(() {
+                              isCanSpeak = false;
+                            });
+                            Navigator.pop(context);
+                            await langConfig();
+                          },
+                          child: const Text(
+                            'No',
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () async {
-                          setState(() {
-                            isCanSpeak = true;
-                          });
-                          Navigator.pop(context);
-                          await langConfig();
-                        },
-                        child: Text(
-                          'Yes',
-                          style: TextStyle(
-                            fontSize: 16.0,
-                            color: greenColor,
-                            fontWeight: FontWeight.bold,
+                        TextButton(
+                          onPressed: () async {
+                            setState(() {
+                              isCanSpeak = true;
+                            });
+                            Navigator.pop(context);
+                            await langConfig();
+                          },
+                          child: Text(
+                            'Yes',
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              color: greenColor,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           );

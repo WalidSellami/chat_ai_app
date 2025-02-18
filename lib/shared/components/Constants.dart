@@ -3,13 +3,13 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 const String baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
 
-const String apiKey = 'your-api-key';
+const String apiKey = 'your-api-key';  // get it from google ai studio (https://aistudio.google.com)
 
 const Map<String, dynamic> generationConfig = {
-  "temperature": 0.9,
-  "top_p": 1,
-  "top_k": 0,
-  "max_output_tokens": 2048,
+  "temperature": 1,
+  "topK": 40,
+  "topP": 0.95,
+  "maxOutputTokens": 8192,
   "response_mime_type": "text/plain",
 };
 
