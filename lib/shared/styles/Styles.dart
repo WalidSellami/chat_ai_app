@@ -25,7 +25,7 @@ ThemeData lightTheme = ThemeData(
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   ),
-  dialogTheme: DialogTheme(
+  dialogTheme: DialogThemeData(
     backgroundColor: secondColor,
   ),
   bottomSheetTheme: BottomSheetThemeData(
@@ -57,7 +57,7 @@ ThemeData darkTheme = ThemeData(
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   ),
-  dialogTheme: DialogTheme(
+  dialogTheme: DialogThemeData(
     backgroundColor: firstColor,
   ),
   bottomSheetTheme: BottomSheetThemeData(

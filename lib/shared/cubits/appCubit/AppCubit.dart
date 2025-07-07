@@ -87,12 +87,15 @@ class AppCubit extends Cubit<AppStates> {
     bool canChange = false,
   }) {
     if(globalIndex == gIndex) {
-      if(!canChange) {
-        selectCurrentIndex = innerIndex;
-      } else {
-        currentIndex = innerIndex;
+      selectCurrentIndex = innerIndex;
+
+      if(canChange) {
+        if(selectCurrentIndex! < currentIndex!) {
+          currentIndex = selectCurrentIndex;
+        }
       }
     }
+
     emit(SuccessSelectAndChangeIndexingAppState());
   }
   
@@ -483,7 +486,7 @@ class AppCubit extends Cubit<AppStates> {
     generateHistOfMsgs(role: 'user', text: message);
 
     await DioHelper.postData(
-        pathUrl: '/models/gemini-1.5-flash:generateContent',
+        pathUrl: '/models/gemini-2.0-flash:generateContent',
         data: {
           'contents': historyMessages,
           'generationConfig': generationConfig,
@@ -810,7 +813,7 @@ class AppCubit extends Cubit<AppStates> {
           imgBase64: imageBase64);
 
       await DioHelper.postData(
-          pathUrl: '/models/gemini-1.5-flash:generateContent',
+          pathUrl: '/models/gemini-2.0-flash:generateContent',
           data: {
             'contents': historyMessages,
             'generationConfig': generationConfig,
