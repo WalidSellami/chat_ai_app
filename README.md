@@ -12,4 +12,3 @@ A Flutter-based AI assistant powered by Google Gemini, supporting chat via text,
 
 > 📸 **Note:** The following section contains images.  
 > ⏳ Depending on your internet connection, they may take a few seconds to load. Please be patient. 
-
