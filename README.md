@@ -10,5 +10,7 @@ A Flutter-based AI assistant powered by Google Gemini, supporting chat via text,
 
 ![3](https://github.com/SellamiWalid/chatAI_app/assets/119450519/bcf7bcc6-0023-428e-92ef-1adb466f8696)
 
-**Note**: Images may take a few seconds to load depending on your connection.
+**------------------------------------**  
+
+> Images might take a moment to load depending on your internet speed.  
 
