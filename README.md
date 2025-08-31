@@ -1,4 +1,4 @@
-# chat_ai
+# ChatAI --> Multilingual AI Assistant App
 
 A Flutter-based AI assistant powered by Google Gemini, supporting chat via text, image, and speech in English, Arabic, and French, with additional smart features, fully integrated with Firebase for real-time data storage and authentication.
 
